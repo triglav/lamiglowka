@@ -1,0 +1,39 @@
+sudo: required
+dist: trusty
+language: cpp
+
+addons:
+  apt:
+    sources:
+      - llvm-toolchain-trusty-5.0
+      - ubuntu-toolchain-r-test
+    packages:
+      - clang-5.0
+      - g++-7
+
+matrix:
+  include:
+    - os: linux
+      env: COMPILER=clang CONFIG=Release
+    - os: linux
+      env: COMPILER=clang CONFIG=Debug
+    - os: linux
+      env: COMPILER=gcc CONFIG=Release
+    - os: linux
+      env: COMPILER=gcc CONFIG=Debug
+    - os: osx
+      env: COMPILER=gcc CONFIG=Release
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gcc; fi
+  - if [[ "$COMPILER" == "clang" ]]; then CC=clang-5.0 && CXX=clang++-5.0; fi
+  - if [[ "$COMPILER" == "gcc" ]]; then CC=gcc-7 && CXX=g++-7; fi
+  - echo $CC
+  - echo $CXX
+  - ./scripts/install-glog.sh
+
+script:
+  - mkdir build && cd build
+  - cmake -D CMAKE_BUILD_TYPE=$CONFIG ..
+  - cmake --build . --config $CONFIG
+
