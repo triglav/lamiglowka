@@ -11,18 +11,24 @@ addons:
       - clang-5.0
       - g++-7
 
+os:
+  - linux
+  - osx
+
+env:
+  - COMPILER=clang CONFIG=Debug
+  - COMPILER=clang CONFIG=Release
+  - COMPILER=gcc CONFIG=Debug
+  - COMPILER=gcc CONFIG=Release
+
 matrix:
-  include:
-    - os: linux
-      env: COMPILER=clang CONFIG=Release
-    - os: linux
-      env: COMPILER=clang CONFIG=Debug
-    - os: linux
-      env: COMPILER=gcc CONFIG=Release
-    - os: linux
+  exclude:
+    - os: osx
       env: COMPILER=gcc CONFIG=Debug
     - os: osx
-      env: COMPILER=gcc CONFIG=Release
+      env: COMPILER=clang CONFIG=Debug
+    - os: osx
+      env: COMPILER=clang CONFIG=Release
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gcc; fi
@@ -33,7 +39,6 @@ before_install:
   - ./scripts/install-glog.sh
 
 script:
-  - mkdir build && cd build
-  - cmake -D CMAKE_BUILD_TYPE=$CONFIG ..
-  - cmake --build . --config $CONFIG
+  - cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=$CONFIG
+  - cmake --build build --config $CONFIG
 

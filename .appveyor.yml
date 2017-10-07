@@ -8,9 +8,9 @@ before_build:
   - vcpkg install glog:x64-windows
 
 build_script:
-  - mkdir build
-  - cd build
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
-  - cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake ..
-  - cmake --build . --config %CONFIGURATION%
+  - cmake -Bbuild -H. -G "NMake Makefiles"
+      -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
+      -DCMAKE_BUILD_TYPE=%CONFIGURATION%
+  - cmake --build build --config %CONFIGURATION%
 
