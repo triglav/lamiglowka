@@ -10,6 +10,7 @@ addons:
     packages:
       - clang-5.0
       - g++-7
+      - cppcheck
 
 os:
   - linux
@@ -31,14 +32,20 @@ matrix:
       env: COMPILER=clang CONFIG=Release
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gcc; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew install gcc; fi
   - if [[ "$COMPILER" == "clang" ]]; then CC=clang-5.0 && CXX=clang++-5.0; fi
   - if [[ "$COMPILER" == "gcc" ]]; then CC=gcc-7 && CXX=g++-7; fi
   - echo $CC
   - echo $CXX
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install cppcheck; fi
+  - sudo pip install cpplint
   - ./scripts/install-glog.sh
 
 script:
+  # build
   - cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=$CONFIG
   - cmake --build build --config $CONFIG
+  # lint
+  - cppcheck --error-exitcode=1 src
+  - cpplint --recursive src
 
