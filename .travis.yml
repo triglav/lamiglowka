@@ -32,14 +32,50 @@ matrix:
       env: COMPILER=clang CONFIG=Release
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew install gcc; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
+
+install:
+  ############################################################################
+  # All the dependencies are installed in ${TRAVIS_BUILD_DIR}/deps/
+  ############################################################################
+  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
+  - mkdir -p ${DEPS_DIR} && pushd ${DEPS_DIR}
+
+  ############################################################################
+  # Setup default versions and override compiler if needed
+  ############################################################################
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gcc cppcheck; fi
   - if [[ "$COMPILER" == "clang" ]]; then CC=clang-5.0 && CXX=clang++-5.0; fi
   - if [[ "$COMPILER" == "gcc" ]]; then CC=gcc-7 && CXX=g++-7; fi
   - echo $CC
   - echo $CXX
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install cppcheck; fi
+
+  ############################################################################
+  # Install a recent CMake
+  ############################################################################
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      CMAKE_URL="https://cmake.org/files/v3.9/cmake-3.9.4-Linux-x86_64.tar.gz"
+      mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
+      export PATH=${DEPS_DIR}/cmake/bin:${PATH}
+    else
+      brew upgrade cmake || brew install cmake
+    fi
+  - cmake --version
+
+  ############################################################################
+  # Install a recent glog
+  ############################################################################
+  - GLOG_URL="https://github.com/google/glog/archive/v0.3.5.tar.gz"
+  - mkdir glog && travis_retry wget --no-check-certificate --quiet -O - ${GLOG_URL} | tar --strip-components=1 -xz -C glog
+  - pushd glog
+  - cmake -Bbuild -H.
+  - cmake --build build
+  - glog_DIR=${DEPS_DIR}/glog/build
+  - popd
+
   - sudo pip install cpplint
-  - ./scripts/install-glog.sh
+  - popd
 
 script:
   # build
