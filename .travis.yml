@@ -10,26 +10,24 @@ addons:
     packages:
       - clang-5.0
       - g++-7
+      - lcov
       - cppcheck
 
-os:
-  - linux
-  - osx
-
-env:
-  - COMPILER=clang CONFIG=Debug
-  - COMPILER=clang CONFIG=Release
-  - COMPILER=gcc CONFIG=Debug
-  - COMPILER=gcc CONFIG=Release
-
 matrix:
-  exclude:
+  include:
+    - os: linux
+      env: COMPILER=clang CONFIG=Debug COVERAGE=OFF
+    - os: linux
+      env: COMPILER=clang CONFIG=Release COVERAGE=OFF
+    - os: linux
+      env: COMPILER=gcc CONFIG=Debug COVERAGE=OFF
+    - os: linux
+      env: COMPILER=gcc CONFIG=Release COVERAGE=OFF
+    - os: linux
+      env: COMPILER=gcc CONFIG=Debug COVERAGE=ON
     - os: osx
-      env: COMPILER=gcc CONFIG=Debug
-    - os: osx
-      env: COMPILER=clang CONFIG=Debug
-    - os: osx
-      env: COMPILER=clang CONFIG=Release
+      env: COMPILER=gcc CONFIG=Release COVERAGE=OFF
+
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
@@ -79,9 +77,17 @@ install:
 
 script:
   # build
-  - cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=$CONFIG
+  - cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=$CONFIG -DBUILD_COVERAGE=$COVERAGE
   - cmake --build build --config $CONFIG
   # lint
   - cppcheck --error-exitcode=1 src
   - cpplint --recursive src
+
+after_success:
+  # codecov
+  - |
+    if [[ "${COVERAGE}" == "ON" ]]; then
+      cmake --build build --config $CONFIG --target core_test_coverage
+      bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+    fi
 

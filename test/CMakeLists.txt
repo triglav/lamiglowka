@@ -22,5 +22,6 @@ if (BUILD_COVERAGE)
   setup_target_for_coverage(
     NAME core_test_coverage
     EXECUTABLE core_test
-    DEPENDENCIES core_test)
+    DEPENDENCIES core_test
+    )
 endif()
